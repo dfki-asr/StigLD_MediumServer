@@ -116,26 +116,26 @@ public class Controller {
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "\n" +
             "DELETE {\n" +
-            "  ?stigma a ex:negFeedback ; ?p ?o .\n" +
+            "  ?stigma a ex:NegFeedback ; ?p ?o .\n" +
             "  ?topos st:carries ?stigma .\n" +
             "}\n" +
             "  INSERT {\n" +
             "  ?topos st:carries ?new .\n" +
-            "  ?new a ex:negFeedback ; st:level ?c ; st:created ?now ; st:decayRate \"0.5\"^^xsd:double .\n" +
+            "  ?new a ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate \"0.5\"^^xsd:double .\n" +
             "}\n" +
             "WHERE {\n" +
             "  BIND(NOW() as ?now)\n" +
             "  ?topos a st:Topos ; st:carries ?stigma .\n" +
-            "  ?stigma a ex:negFeedback ; ?p ?o .\n" +
+            "  ?stigma a ex:NegFeedback ; ?p ?o .\n" +
             "  FILTER (isBlank(?stigma))\n" +
             "\n" +
             "  {SELECT distinct ?topos (BNODE() as ?new) WHERE {\n" +
             "    ?topos a st:Topos .\n" +
-            "    FILTER EXISTS { ?topos st:carries [ a ex:negFeedback ] .}\n" +
+            "    FILTER EXISTS { ?topos st:carries [ a ex:NegFeedback ] .}\n" +
             "  }}\n" +
             "\n" +
             "  {SELECT (SUM(?c_i) as ?c) ?topos WHERE {\n" +
-            "    ?topos st:carries [ a ex:negFeedback ; st:level ?lvl; st:created ?then; st:decayRate ?d ].\n" +
+            "    ?topos st:carries [ a ex:NegFeedback ; st:level ?lvl; st:created ?then; st:decayRate ?d ].\n" +
             "    BIND(stigFN:linear_decay(?then, now(), ?d, ?lvl) as ?c_i)\n" +
             "  } GROUP BY ?topos}\n" +
             "}";
@@ -151,11 +151,11 @@ public class Controller {
             "\n" +
             "DELETE {\n" +
             "    ?existing st:carries ?ex .\n" +
-            "    ?ex a st:diffusionTrace ; ?p ?o .\n" +
+            "    ?ex a st:DiffusionTrace ; ?p ?o .\n" +
             "}\n" +
             "WHERE{\n" +
             "    ?existing st:carries ?ex .\n" +
-            "    ?ex a st:diffusionTrace ; ?p ?o .\n" +
+            "    ?ex a st:DiffusionTrace ; ?p ?o .\n" +
             "    FILTER(isBlank(?ex))\n" +
             "} ;\n" +
             "\n" +
@@ -165,7 +165,7 @@ public class Controller {
             "    ?stigma st:level ?srcLevel .\n" +
             "}\n" +
             "INSERT {\n" +
-            "    ?aoe st:carries [ a ex:diffusionTrace ; st:level ?diffusion ] .\n" +
+            "    ?aoe st:carries [ a ex:DiffusionTrace ; st:level ?diffusion ] .\n" +
             "    ?stigma st:level ?sourceDiffusion .\n" +
             "}\n" +
             "WHERE {\n" +
@@ -187,18 +187,18 @@ public class Controller {
             "\n" +
             "DELETE {\n" +
             "\t?topos st:carries ?old .\n" +
-            "\t?old a ex:diffusionTrace ; st:level ?oldLevel .\n" +
+            "\t?old a ex:DiffusionTrace ; st:level ?oldLevel .\n" +
             "}\n" +
             "INSERT {\n" +
             "\t?topos st:carries ?stigma .\n" +
-            "\t?stigma a ex:diffusionTrace ; st:level ?c .\n" +
+            "\t?stigma a ex:DiffusionTrace ; st:level ?c .\n" +
             "}\n" +
             "WHERE {\n" +
             "\t?topos st:carries ?old .\n" +
-            "\t?old a ex:diffusionTrace ; st:level ?oldLevel .\n" +
+            "\t?old a ex:DiffusionTrace ; st:level ?oldLevel .\n" +
             "  FILTER(isBlank(?old))\n" +
             "\t{SELECT (SUM(?lvl) as ?c) (BNODE() as ?stigma) ?topos WHERE {\n" +
-            "\t\t?topos a st:Topos ; st:carries [a ex:diffusionTrace; st:level ?lvl ].\n" +
+            "\t\t?topos a st:Topos ; st:carries [a ex:DiffusionTrace; st:level ?lvl ].\n" +
             "\t} GROUP BY ?topos}\n" +
             "}";
 
