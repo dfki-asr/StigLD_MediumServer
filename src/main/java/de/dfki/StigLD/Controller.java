@@ -4,9 +4,12 @@ package de.dfki.StigLD;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 
@@ -14,8 +17,7 @@ import java.io.IOException;
 @RequestMapping("/sparql/")
 public class Controller {
     @GetMapping("/getModel")
-    public String getModel(@RequestParam(name = "query") String query) throws IOException, UnirestException {
-        System.out.println("JERE");
+    public String getModel() throws IOException, UnirestException {
         initEvolve();
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
@@ -31,11 +33,12 @@ public class Controller {
         {
             resp = "No response";
         }
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
         Model model = ModelFactory.createDefaultModel();
-        model.read(resp);
-        model.write(System.out, "JSON-LD");
-        System.out.println(resp);
-        return query;
+        model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
+        model.write(stream, "JSON-LD");
+        String ret = stream.toString();
+        return ret;
     }
 
     @PostMapping("/query")
