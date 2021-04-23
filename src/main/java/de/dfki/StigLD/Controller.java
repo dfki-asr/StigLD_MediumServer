@@ -124,12 +124,12 @@ public class Controller {
             "}\n" +
             "  INSERT {\n" +
             "  ?topos st:carries ?new .\n" +
-            "  ?new a ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate \"0.5\"^^xsd:double .\n" +
+            "  ?new a st:Stiga, ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate ?d .\n" +
             "}\n" +
             "WHERE {\n" +
             "  BIND(NOW() as ?now)\n" +
             "  ?topos a st:Topos ; st:carries ?stigma .\n" +
-            "  ?stigma a ex:NegFeedback ; ?p ?o .\n" +
+            "  ?stigma a ex:NegFeedback ; st:decayRate ?d ; ?p ?o .\n" +
             "  FILTER (isBlank(?stigma))\n" +
             "\n" +
             "  {SELECT distinct ?topos (BNODE() as ?new) WHERE {\n" +
@@ -143,7 +143,7 @@ public class Controller {
             "  } GROUP BY ?topos}\n" +
             "}";
 
-    public String diff_evolve =               "PREFIX ex:<http://example.org/>\n" +
+    public String diff_evolve = "PREFIX ex:<http://example.org/>\n" +
             "PREFIX pos: <http://example.org/property/position#>\n" +
             "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
             "PREFIX st:  <http://example.org/stigld/>\n" +
@@ -168,7 +168,7 @@ public class Controller {
             "    ?stigma st:level ?srcLevel .\n" +
             "}\n" +
             "INSERT {\n" +
-            "    ?aoe st:carries [ a ex:DiffusionTrace ; st:level ?diffusion ] .\n" +
+            "    ?aoe st:carries [ a st:Stigma , ex:DiffusionTrace ; st:level ?diffusion ] .\n" +
             "    ?stigma st:level ?sourceDiffusion .\n" +
             "}\n" +
             "WHERE {\n" +
@@ -184,7 +184,7 @@ public class Controller {
             "    BIND(0 as ?sourceDist)\n" +
             "    BIND(stigFN:diffusion_1D(?sourceDist, ?duration, ?srcLevel, ?decay) AS ?sourceDiffusion)\n" +
             "    FILTER(?dist > 0 && ?dist < 4 )\n" +
-            "};\n" +
+            "} ;\n" +
             "\n" +
             "########## AGGREGATE DIFFUSION TRACES FROM DIFFERENT SOURCES\n" +
             "\n" +
