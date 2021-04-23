@@ -57,7 +57,6 @@ public class Controller {
         {
             resp = "No response";
         }
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
         Model model = ModelFactory.createDefaultModel();
         model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
 	return new JSON_Serializer().getModelAsJson(model);
