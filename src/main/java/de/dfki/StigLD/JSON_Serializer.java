@@ -5,10 +5,12 @@
  */
 package de.dfki.StigLD;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import java.util.List;
 import java.util.Vector;
+import lombok.Getter;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -26,26 +28,42 @@ public class JSON_Serializer {
 
     private Topos[][] topoi;
 
-    private class Topos {
+    public class Topos {
 
+	@Getter
 	int x;
+
+	@Getter
 	int y;
+
+	@Getter
 	double NegFeedback;
+
+	@Getter
 	double TransportStigma;
+
+	@Getter
 	double DiffusionTrace;
-	Machine machine;
-	Transporter transporter;
+
+	@Getter
+	Machine Machine;
+
+	@Getter
+	Transporter Transporter;
     }
 
-    private class Machine {
+    public class Machine {
 
+	@Getter
 	int Orders;
+	@Getter
 	int Waiting;
     }
 
-    private class Transporter {
+    public class Transporter {
 
-	int TimeToPickup;
+	@Getter
+	double TimeToPickup;
     }
 
     public String getModelAsJson(Model model) {
