@@ -111,7 +111,8 @@ public class JSON_Serializer {
 
     private final String getTopoi = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
-	    + "SELECT ?x ?y ?lvl  (MAX(?y) as ?max_y) WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y }";
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "SELECT (MAX(?x) as ?max_x)  (MAX(?y) as ?max_y) WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y }";
 
     private final String getNegFeedback = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
