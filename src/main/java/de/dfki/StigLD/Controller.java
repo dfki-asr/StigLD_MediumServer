@@ -40,6 +40,27 @@ public class Controller {
         String ret = stream.toString();
         return ret;
     }
+    @GetMapping(value="/json", produces="application/json")
+    public String json() throws IOException, UnirestException {
+        initEvolve();
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+                .header("Content-Type", "application/sparql-query")
+                .header("Accept", "text/turtle")
+                .body(getAllTriples)
+                .asString();
+        String resp;
+        try{
+            resp = response.getBody();
+        }
+        catch (NullPointerException e)
+        {
+            resp = "No response";
+        }
+        Model model = ModelFactory.createDefaultModel();
+        model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
+	return new JSON_Serializer().getModelAsJson(model);
+    }
 
     @PostMapping("/query")
     public String query(@RequestBody String query) throws IOException, UnirestException {
@@ -109,6 +130,10 @@ public class Controller {
                 .header("Content-Type", "application/sparql-update")
                 .body(diff_evolve)
                 .asString();
+        HttpResponse<String> response3 = Unirest.post("http://localhost:3230/ds/")
+                .header("Content-Type", "application/sparql-update")
+                .body(deleteStigma)
+                .asString();
     }
 
     public String evolve = "PREFIX ex:<http://example.org/>\n" +
@@ -141,6 +166,17 @@ public class Controller {
             "    ?topos st:carries [ a ex:NegFeedback ; st:level ?lvl; st:created ?then; st:decayRate ?d ].\n" +
             "    BIND(stigFN:linear_decay(?then, now(), ?d, ?lvl) as ?c_i)\n" +
             "  } GROUP BY ?topos}\n" +
+            "};\n" +
+            "DELETE\n" +
+            "{\n" +
+            "    ?topos st:carries ?stigma.\n" +
+            "    ?stigma ?p ?o.\n" +
+            "}\n" +
+            "WHERE{\n" +
+            "    ?topos a st:Topos ; st:carries ?stigma.\n" +
+            "    ?stigma a st:Stigma; st:level ?lvl; ?p ?o.\n" +
+            "    FILTER (isBlank(?stigma))\n" +
+            "    FILTER(?lvl=0)\n" +
             "}";
 
     public String diff_evolve = "PREFIX ex:<http://example.org/>\n" +
@@ -194,7 +230,7 @@ public class Controller {
             "}\n" +
             "INSERT {\n" +
             "\t?topos st:carries ?stigma .\n" +
-            "\t?stigma a st:Stigma , ex:DiffusionTrace ; st:level ?c .\n" +
+            "\t?stigma a ex:DiffusionTrace, st:Stigma ; st:level ?c .\n" +
             "}\n" +
             "WHERE {\n" +
             "\t?topos st:carries ?old .\n" +
@@ -217,4 +253,22 @@ public class Controller {
                     "prefix en:    <http://example.org/entities#> \n" +
                     "prefix topos: <http://example.org/gridPoint/> \n"+
                     "DESCRIBE * WHERE {?s ?p ?o.}\n";
+
+            public String deleteStigma ="PREFIX ex:<http://example.org/>\n" +
+                    "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+                    "PREFIX dct: <http://purl.org/dc/terms/>\n" +
+                    "PREFIX st:  <http://example.org/stigld/>\n" +
+                    "PREFIX stigFN: <http://www.dfki.de/func#>\n" +
+                    "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                    "DELETE\n" +
+                    "{\n" +
+                    "    ?topos st:carries ?stigma.\n" +
+                    "    ?stigma ?p ?o.\n" +
+                    "}\n" +
+                    "WHERE{\n" +
+                    "    ?topos a st:Topos ; st:carries ?stigma.\n" +
+                    "    ?stigma a st:Stigma; st:level ?lvl; ?p ?o.\n" +
+                    "    FILTER (isBlank(?stigma))\n" +
+                    "    FILTER(?lvl=0)\n" +
+                    "}";
 }
