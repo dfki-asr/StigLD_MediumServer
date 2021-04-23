@@ -61,7 +61,8 @@ public class JSON_Serializer {
 	setTransport(model);
 	setDiffusion(model);
 	setMachines(model);
-	return "NOT IMPLEMENTED";
+	setTransporters(model);
+	return objectMapper.writeValueAsString(topoi);
     }
 
     private void setNegativeFeedback(Model model) {
@@ -113,7 +114,7 @@ public class JSON_Serializer {
     }
 
     private void setMachines(Model model) {
-	QueryExecution q = QueryExecutionFactory.create(getDiffusion, model);
+	QueryExecution q = QueryExecutionFactory.create(getMachines, model);
 	ResultSet r = q.execSelect();
 	r.forEachRemaining(s -> {
 	    int x = s.getLiteral("x").getInt();
@@ -128,7 +129,10 @@ public class JSON_Serializer {
 	    Machine m = new Machine();
 	    m.Orders = scheduled;
 	    m.Waiting = waiting;
-	    topoi[y][x].machine = m;
+	    topoi[y][x].Machine = m;
+	});
+    }
+
     private void setTransporters(Model model) {
 	QueryExecution q = QueryExecutionFactory.create(getTransporters, model);
 	ResultSet r = q.execSelect();
@@ -172,16 +176,13 @@ public class JSON_Serializer {
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
 	    + "\n"
-	    + "SELECT ?scheduled ?waiting ?x ?y WHERE {\n"
+	    + "SELECT DISTINCT ?scheduled ?waiting ?x ?y WHERE{\n"
+	    + "                ?m a ex:ProductionArtifact ;  ex:located [ pos:xPos ?x ; pos:yPos ?y ] . \n"
 	    + "                \n"
-	    + "                {SELECT DISTINCT ?x ?y ?m ?scheduled ?waiting WHERE {\n"
-	    + "                 ?m a ex:ProductionArtifact ;  ex:located ?t . \n"
-	    + "                 ?t pos:xPos ?x ; pos:yPos ?y .\n"
-	    + "                                \n"
 	    + "                {SELECT (COUNT(?q) as ?scheduled ) ?m WHERE {\n"
 	    + "                    ?m a ex:ProductionArtifact.\n"
 	    + "                    OPTIONAL { ?m ex:queue ?q.  }\n"
-	    + "                } GROUP BY ?m }}}\n"
+	    + "                } GROUP BY ?m }\n"
 	    + "                \n"
 	    + "                {SELECT (COUNT(?prod) as ?waiting ) ?m WHERE {\n"
 	    + "                    ?m a ex:ProductionArtifact ; ex:outputPort ?o . \n"
