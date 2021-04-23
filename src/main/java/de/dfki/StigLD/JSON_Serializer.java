@@ -26,12 +26,6 @@ public class JSON_Serializer {
     public class Topos {
 
 	@Getter
-	int x;
-
-	@Getter
-	int y;
-
-	@Getter
 	double NegFeedback;
 
 	@Getter
