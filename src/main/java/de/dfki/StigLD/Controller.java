@@ -194,7 +194,7 @@ public class Controller {
             "}\n" +
             "INSERT {\n" +
             "\t?topos st:carries ?stigma .\n" +
-            "\t?stigma a ex:DiffusionTrace ; st:level ?c .\n" +
+            "\t?stigma a st:Stigma , ex:DiffusionTrace ; st:level ?c .\n" +
             "}\n" +
             "WHERE {\n" +
             "\t?topos st:carries ?old .\n" +
