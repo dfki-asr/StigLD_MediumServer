@@ -5,6 +5,7 @@
  */
 package de.dfki.StigLD;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -27,6 +28,7 @@ import org.apache.jena.rdf.model.Model;
 public class JSON_Serializer {
 
     private Topos[][] topoi;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     public class Topos {
 
@@ -66,7 +68,7 @@ public class JSON_Serializer {
 	double TimeToPickup;
     }
 
-    public String getModelAsJson(Model model) {
+    public String getModelAsJson(Model model) throws JsonProcessingException {
 
 	QueryExecution q = QueryExecutionFactory.create(getTopoi, model);
 	ResultSet r = q.execSelect();
