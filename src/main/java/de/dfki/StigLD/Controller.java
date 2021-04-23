@@ -40,6 +40,28 @@ public class Controller {
         String ret = stream.toString();
         return ret;
     }
+    @GetMapping("/json")
+    public String json() throws IOException, UnirestException {
+        initEvolve();
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+                .header("Content-Type", "application/sparql-query")
+                .header("Accept", "text/turtle")
+                .body(getAllTriples)
+                .asString();
+        String resp;
+        try{
+            resp = response.getBody();
+        }
+        catch (NullPointerException e)
+        {
+            resp = "No response";
+        }
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        Model model = ModelFactory.createDefaultModel();
+        model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
+	return new JSON_Serializer().getModelAsJson(model);
+    }
 
     @PostMapping("/query")
     public String query(@RequestBody String query) throws IOException, UnirestException {
