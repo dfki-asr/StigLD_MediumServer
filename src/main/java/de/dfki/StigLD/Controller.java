@@ -124,7 +124,7 @@ public class Controller {
             "}\n" +
             "  INSERT {\n" +
             "  ?topos st:carries ?new .\n" +
-            "  ?new a st:Stiga, ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate ?d .\n" +
+            "  ?new a st:Stigma, ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate ?d .\n" +
             "}\n" +
             "WHERE {\n" +
             "  BIND(NOW() as ?now)\n" +
