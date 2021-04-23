@@ -31,7 +31,7 @@ public class JSON_Serializer {
 	int x;
 	int y;
 	double NegFeedback;
-	double TransportStiga;
+	double TransportStigma;
 	double DiffusionTrace;
 	Machine machine;
 	Transporter transporter;
@@ -57,16 +57,74 @@ public class JSON_Serializer {
 	int y = solution.getLiteral("max_y").getInt() + 1;
 
 	topoi = new Topos[y][x];
-
+	setNegativeFeedback(model);
 	return "NOT IMPLEMENTED";
     }
 
-    private String getTopoi = "PREFIX ex:<http://example.org/>\n"
+    private void setNegativeFeedback(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getNegFeedback, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
+	    double level = s.getLiteral("lvl").getDouble();
+
+	    if (topoi[y][x] == null) {
+		topoi[y][x] = new Topos();
+	    }
+
+	    topoi[y][x].NegFeedback = level;
+	});
+    }
+
+    private void setTransport(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getTransport, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
+	    double level = s.getLiteral("lvl").getDouble();
+
+	    if (topoi[y][x] == null) {
+		topoi[y][x] = new Topos();
+	    }
+
+	    topoi[y][x].TransportStigma = level;
+	});
+    }
+
+    private void setDiffusion(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getDiffusion, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
+	    double level = s.getLiteral("lvl").getDouble();
+
+	    if (topoi[y][x] == null) {
+		topoi[y][x] = new Topos();
+	    }
+
+	    topoi[y][x].DiffusionTrace = level;
+	});
+    }
+
+    private final String getTopoi = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "SELECT ?x ?y ?lvl  (MAX(?y) as ?max_y) WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y }";
 
-    private String getNegFeedback = "PREFIX ex:<http://example.org/>\n"
+    private final String getNegFeedback = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:NegFeedback ; st:level ?lvl ] }";
+
+    private final String getTransport = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:TransportStigma; st:level ?lvl ] }";
+
+    private final String getDiffusion = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:DiffusionTrace; st:level ?lvl ] }";
 }
