@@ -159,8 +159,9 @@ public class JSON_Serializer {
 	r.forEachRemaining(s -> {
 	    int x = s.getLiteral("x").getInt();
 	    int y = s.getLiteral("y").getInt();
-	    double remaining = s.getLiteral("remaining").getDouble();
-
+	    double remaining = 0;
+	    if (s.contains("remaining"))
+		    remaining = s.getLiteral("remaining").getDouble();
 	    if (topoi[y][x] == null) {
 		topoi[y][x] = new Topos();
 	    }
@@ -214,13 +215,13 @@ public class JSON_Serializer {
     private final String getTransporters = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT DISTINCT ?t ?x ?y ?remaining  WHERE \n"
+	    + "SELECT DISTINCT ?t ?x ?y ?remaining WHERE\n"
 	    + "    { \n"
 	    + "        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] .\n"
 	    + "        OPTIONAL {\n"
-	    + "            ?t ex:queue [ a ex:PickupTask ; ex:endTime ?end ] .\n"
-	    + "            BIND(IF(NOW() > ?end, 0, seconds(?end - NOW())) as ?r )             \n"
-	    + "        }\n"
-	    + "        BIND(IF(bound(?r) && ?r > 0 , ?r, 0) as ?remaining)\n"
+	    + "            ?t ex:queue [a ex:PickUpTask ; ex:endTime ?end ] .\n"
+	    + "            BIND(NOW() as ?now)\n"
+	    + "            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?remaining )\n"
+	    + "        }        \n"
 	    + "    }";
 }
