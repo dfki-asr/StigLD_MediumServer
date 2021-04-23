@@ -129,6 +129,21 @@ public class JSON_Serializer {
 	    m.Orders = scheduled;
 	    m.Waiting = waiting;
 	    topoi[y][x].machine = m;
+    private void setTransporters(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getTransporters, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
+	    double remaining = s.getLiteral("remaining").getDouble();
+
+	    if (topoi[y][x] == null) {
+		topoi[y][x] = new Topos();
+	    }
+
+	    Transporter t = new Transporter();
+	    t.TimeToPickup = remaining;
+	    topoi[y][x].Transporter = t;
 	});
     }
 
@@ -174,4 +189,17 @@ public class JSON_Serializer {
 	    + "                   OPTIONAL { ?prod a ex:Product ; ex:located ?o_pos .  }\n"
 	    + "                } GROUP BY ?m }\n"
 	    + "}";
+
+    private final String getTransporters = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "SELECT DISTINCT ?t ?x ?y ?remaining  WHERE \n"
+	    + "    { \n"
+	    + "        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] .\n"
+	    + "        OPTIONAL {\n"
+	    + "            ?t ex:queue [ a ex:PickupTask ; ex:endTime ?end ] .\n"
+	    + "            BIND(IF(NOW() > ?end, 0, seconds(?end - NOW())) as ?r )             \n"
+	    + "        }\n"
+	    + "        BIND(IF(bound(?r) && ?r > 0 , ?r, 0) as ?remaining)\n"
+	    + "    }";
 }
