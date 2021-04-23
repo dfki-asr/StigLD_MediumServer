@@ -60,6 +60,7 @@ public class JSON_Serializer {
 	setNegativeFeedback(model);
 	setTransport(model);
 	setDiffusion(model);
+	setMachines(model);
 	return "NOT IMPLEMENTED";
     }
 
@@ -111,6 +112,26 @@ public class JSON_Serializer {
 	});
     }
 
+    private void setMachines(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getDiffusion, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
+	    int scheduled = s.getLiteral("scheduled").getInt();
+	    int waiting = s.getLiteral("waiting").getInt();
+
+	    if (topoi[y][x] == null) {
+		topoi[y][x] = new Topos();
+	    }
+
+	    Machine m = new Machine();
+	    m.Orders = scheduled;
+	    m.Waiting = waiting;
+	    topoi[y][x].machine = m;
+	});
+    }
+
     private final String getTopoi = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
@@ -130,4 +151,27 @@ public class JSON_Serializer {
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:DiffusionTrace; st:level ?lvl ] }";
+
+    private final String getMachines = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+	    + "\n"
+	    + "SELECT ?scheduled ?waiting ?x ?y WHERE {\n"
+	    + "                \n"
+	    + "                {SELECT DISTINCT ?x ?y ?m ?scheduled ?waiting WHERE {\n"
+	    + "                 ?m a ex:ProductionArtifact ;  ex:located ?t . \n"
+	    + "                 ?t pos:xPos ?x ; pos:yPos ?y .\n"
+	    + "                                \n"
+	    + "                {SELECT (COUNT(?q) as ?scheduled ) ?m WHERE {\n"
+	    + "                    ?m a ex:ProductionArtifact.\n"
+	    + "                    OPTIONAL { ?m ex:queue ?q.  }\n"
+	    + "                } GROUP BY ?m }}}\n"
+	    + "                \n"
+	    + "                {SELECT (COUNT(?prod) as ?waiting ) ?m WHERE {\n"
+	    + "                    ?m a ex:ProductionArtifact ; ex:outputPort ?o . \n"
+	    + "                    ?o ex:located ?o_pos .\n"
+	    + "                   OPTIONAL { ?prod a ex:Product ; ex:located ?o_pos .  }\n"
+	    + "                } GROUP BY ?m }\n"
+	    + "}";
 }
