@@ -40,7 +40,7 @@ public class Controller {
         String ret = stream.toString();
         return ret;
     }
-    @GetMapping("/json")
+    @GetMapping(value="/json", produces="application/json")
     public String json() throws IOException, UnirestException {
         initEvolve();
         Unirest.setTimeouts(0, 0);
