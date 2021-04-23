@@ -58,6 +58,8 @@ public class JSON_Serializer {
 
 	topoi = new Topos[y][x];
 	setNegativeFeedback(model);
+	setTransport(model);
+	setDiffusion(model);
 	return "NOT IMPLEMENTED";
     }
 
