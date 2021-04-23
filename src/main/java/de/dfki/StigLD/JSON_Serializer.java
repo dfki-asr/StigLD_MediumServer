@@ -81,7 +81,7 @@ public class JSON_Serializer {
     }
 
     private void setTransport(Model model) {
-	QueryExecution q = QueryExecutionFactory.create(getTransport, model);
+	QueryExecution q = QueryExecutionFactory.create(getTransportStigma, model);
 	ResultSet r = q.execSelect();
 	r.forEachRemaining(s -> {
 	    int x = s.getLiteral("x").getInt();
@@ -142,7 +142,7 @@ public class JSON_Serializer {
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:NegFeedback ; st:level ?lvl ] }";
 
-    private final String getTransport = "PREFIX ex:<http://example.org/>\n"
+    private final String getTransportStigma = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:TransportStigma; st:level ?lvl ] }";
