@@ -179,68 +179,68 @@ public class Controller {
             "    FILTER(?lvl=0)\n" +
             "}";
 
-    public String diff_evolve = "PREFIX ex:<http://example.org/>\n" +
-            "PREFIX pos: <http://example.org/property/position#>\n" +
-            "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
-            "PREFIX st:  <http://example.org/stigld/>\n" +
-            "PREFIX stigFN: <http://www.dfki.de/func#>\n" +
-            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-            "\n" +
-            "########## REMOVE OLD DIFFUSION TRACES\n" +
-            "\n" +
-            "DELETE {\n" +
-            "    ?existing st:carries ?ex .\n" +
-            "    ?ex a st:DiffusionTrace ; ?p ?o .\n" +
-            "}\n" +
-            "WHERE{\n" +
-            "    ?existing st:carries ?ex .\n" +
-            "    ?ex a st:DiffusionTrace ; ?p ?o .\n" +
-            "    FILTER(isBlank(?ex))\n" +
-            "} ;\n" +
-            "\n" +
-            "########## CALCULATE NEW DIFFUSION TRACES\n" +
-            "\n" +
-            "DELETE {\n" +
-            "    ?stigma st:level ?srcLevel .\n" +
-            "}\n" +
-            "INSERT {\n" +
-            "    ?aoe st:carries [ a st:Stigma , ex:DiffusionTrace ; st:level ?diffusion ] .\n" +
-            "    ?stigma st:level ?sourceDiffusion .\n" +
-            "}\n" +
-            "WHERE {\n" +
-            "\n" +
-            "    ?source  a st:Topos; pos:xPos ?source_x; pos:yPos ?source_y; st:carries ?stigma.\n" +
-            "    ?stigma a ex:TransportStigma; st:created ?then; st:decayRate ?decay ; st:level ?srcLevel .\n" +
-            "    ?aoe  a st:Topos;    pos:xPos ?effect_x;    pos:yPos ?effect_y.\n" +
-            "\n" +
-            "    BIND(NOW() AS ?now)\n" +
-            "    BIND(stigFN:duration_secs(?then, ?now) AS ?duration)\n" +
-            "    BIND(abs(?effect_x-?source_x) + abs(?effect_y-?source_y) AS ?dist)\n" +
-            "    BIND(stigFN:diffusion_1D(?dist, ?duration, ?srcLevel, ?decay) AS ?diffusion)\n" +
-            "    BIND(0 as ?sourceDist)\n" +
-            "    BIND(stigFN:diffusion_1D(?sourceDist, ?duration, ?srcLevel, ?decay) AS ?sourceDiffusion)\n" +
-            "    FILTER(?dist > 0 && ?dist < 4 )\n" +
-            "} ;\n" +
-            "\n" +
-            "########## AGGREGATE DIFFUSION TRACES FROM DIFFERENT SOURCES\n" +
-            "\n" +
-            "DELETE {\n" +
-            "\t?topos st:carries ?old .\n" +
-            "\t?old a ex:DiffusionTrace ; st:level ?oldLevel .\n" +
-            "}\n" +
-            "INSERT {\n" +
-            "\t?topos st:carries ?stigma .\n" +
-            "\t?stigma a ex:DiffusionTrace, st:Stigma ; st:level ?c .\n" +
-            "}\n" +
-            "WHERE {\n" +
-            "\t?topos st:carries ?old .\n" +
-            "\t?old a ex:DiffusionTrace ; st:level ?oldLevel .\n" +
-            "  FILTER(isBlank(?old))\n" +
-            "\t{SELECT (SUM(?lvl) as ?c) (BNODE() as ?stigma) ?topos WHERE {\n" +
-            "\t\t?topos a st:Topos ; st:carries [a ex:DiffusionTrace; st:level ?lvl ].\n" +
-            "\t} GROUP BY ?topos}\n" +
-            "}";
 
+    public String diff_evolve = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "PREFIX stigFN: <http://www.dfki.de/func#>\n"
+	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+	    + "\n"
+	    + "########## REMOVE OLD DIFFUSION TRACES\n"
+	    + "\n"
+	    + "DELETE {\n"
+	    + "    ?existing st:carries ?ex .\n"
+	    + "    ?ex a st:DiffusionTrace ; ?p ?o .\n"
+	    + "}\n"
+	    + "WHERE{\n"
+	    + "    ?existing st:carries ?ex .\n"
+	    + "    ?ex a st:DiffusionTrace ; ?p ?o .\n"
+	    + "    FILTER(isBlank(?ex))\n"
+	    + "} ;\n"
+	    + "\n"
+	    + "########## CALCULATE NEW DIFFUSION TRACES\n"
+	    + "\n"
+	    + "DELETE {\n"
+	    + "    ?stigma st:level ?srcLevel .\n"
+	    + "}\n"
+	    + "INSERT {\n"
+	    + "    ?aoe st:carries [ a st:Stigma , ex:DiffusionTrace ; st:level ?diffusion ; ex:diffusionSource ?source ] .\n"
+	    + "    ?stigma st:level ?sourceDiffusion .\n"
+	    + "}\n"
+	    + "WHERE {\n"
+	    + "\n"
+	    + "    ?source  a st:Topos; pos:xPos ?source_x; pos:yPos ?source_y; st:carries ?stigma.\n"
+	    + "    ?stigma a ex:TransportStigma; st:created ?then; st:decayRate ?decay ; st:level ?srcLevel .\n"
+	    + "    ?aoe  a st:Topos;    pos:xPos ?effect_x;    pos:yPos ?effect_y.\n"
+	    + "\n"
+	    + "    BIND(NOW() AS ?now)\n"
+	    + "    BIND(stigFN:duration_secs(?then, ?now) AS ?duration)\n"
+	    + "    BIND(abs(?effect_x-?source_x) + abs(?effect_y-?source_y) AS ?dist)\n"
+	    + "    BIND(stigFN:diffusion_1D(?dist, ?duration, ?srcLevel, ?decay) AS ?diffusion)\n"
+	    + "    BIND(0 as ?sourceDist)\n"
+	    + "    BIND(stigFN:diffusion_1D(?sourceDist, ?duration, ?srcLevel, ?decay) AS ?sourceDiffusion)\n"
+	    + "    FILTER(?dist > 0 && ?dist < 4 )\n"
+	    + "} ;\n"
+	    + "\n"
+	    + "########## AGGREGATE DIFFUSION TRACES FROM SAME SOURCES\n"
+	    + "\n"
+	    + "DELETE {\n"
+	    + "	?topos st:carries ?old .\n"
+	    + "	?old a st:Stigma , ex:DiffusionTrace ; st:level ?oldLevel .\n"
+	    + "}\n"
+	    + "INSERT {\n"
+	    + "	?topos st:carries ?stigma .\n"
+	    + "	?stigma a st:Stigma , ex:DiffusionTrace ; st:level ?c ; ex:diffusionSource ?source.\n"
+	    + "}\n"
+	    + "WHERE {\n"
+	    + "	?topos st:carries ?old .\n"
+	    + "	?old a st:Stigma , ex:DiffusionTrace ; st:level ?oldLevel ; ex:diffusionSource ?source .\n"
+	    + "  FILTER(isBlank(?old))\n"
+	    + "	{SELECT (SUM(?lvl) as ?c) (BNODE() as ?stigma) ?topos ?source WHERE {\n"
+	    + "		?topos a st:Topos ; st:carries [a st:Stigma , ex:DiffusionTrace; st:level ?lvl ; ex:diffusionSource ?source ].\n"
+	    + "	} GROUP BY ?topos ?source }\n"
+	    + "}";
 
             public String getAllTriples = "prefix ord:   <http://example.org/orders#>\n" +
                     "prefix st:    <http://example.org/stigld/> \n" +
