@@ -36,7 +36,7 @@ public class Controller {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         Model model = ModelFactory.createDefaultModel();
         model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
-        model.write(stream, "JSON-LD");
+        model.write(stream, "TTL");
         String ret = stream.toString();
         return ret;
     }
@@ -220,7 +220,7 @@ public class Controller {
 	    + "    BIND(stigFN:diffusion_1D(?dist, ?duration, ?srcLevel, ?decay) AS ?diffusion)\n"
 	    + "    BIND(0 as ?sourceDist)\n"
 	    + "    BIND(stigFN:diffusion_1D(?sourceDist, ?duration, ?srcLevel, ?decay) AS ?sourceDiffusion)\n"
-	    + "    FILTER(?dist > 0 && ?dist < 4 )\n"
+	    + "    FILTER(?dist > 0 && ?dist < 6 )\n"
 	    + "} ;\n"
 	    + "\n"
 	    + "########## AGGREGATE DIFFUSION TRACES FROM SAME SOURCES\n"

@@ -144,11 +144,12 @@ public class JSON_Serializer {
 	QueryExecution q = QueryExecutionFactory.create(getTransporters, model);
 	ResultSet r = q.execSelect();
 	r.forEachRemaining(s -> {
+
 	    int x = s.getLiteral("x").getInt();
 	    int y = s.getLiteral("y").getInt();
 	    double remaining = 0;
 	    if (s.contains("remaining"))
-		    remaining = s.getLiteral("remaining").getDouble();
+			remaining = s.getLiteral("remaining").getDouble();
 	    if (topoi[y][x] == null) {
 		topoi[y][x] = new Topos();
 	    }
