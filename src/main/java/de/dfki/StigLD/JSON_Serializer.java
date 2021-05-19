@@ -39,10 +39,12 @@ public class JSON_Serializer {
 
 	@Getter
 	Transporter Transporter;
+
+	@Getter
+	boolean outputPort;
     }
 
     public class Machine {
-
 	@Getter
 	int Orders;
 	@Getter
@@ -53,6 +55,9 @@ public class JSON_Serializer {
 
 	@Getter
 	double TimeToPickup;
+
+	@Getter
+	double TimeToMove;
     }
 
     public String getModelAsJson(Model model) throws JsonProcessingException {
@@ -69,6 +74,7 @@ public class JSON_Serializer {
 	setDiffusion(model);
 	setMachines(model);
 	setTransporters(model);
+	setOutputPorts(model);
 	return objectMapper.writeValueAsString(topoi);
     }
 
@@ -140,6 +146,22 @@ public class JSON_Serializer {
 	});
     }
 
+	private void setOutputPorts(Model model) {
+		QueryExecution q = QueryExecutionFactory.create(getOutputPorts, model);
+		ResultSet r = q.execSelect();
+		r.forEachRemaining(s -> {
+			int x = s.getLiteral("x").getInt();
+			int y = s.getLiteral("y").getInt();
+
+			if (topoi[y][x] == null) {
+				topoi[y][x] = new Topos();
+			}
+
+
+			topoi[y][x].outputPort = true;
+		});
+	}
+
     private void setTransporters(Model model) {
 	QueryExecution q = QueryExecutionFactory.create(getTransporters, model);
 	ResultSet r = q.execSelect();
@@ -147,15 +169,19 @@ public class JSON_Serializer {
 
 	    int x = s.getLiteral("x").getInt();
 	    int y = s.getLiteral("y").getInt();
-	    double remaining = 0;
-	    if (s.contains("remaining"))
-			remaining = s.getLiteral("remaining").getDouble();
+	    double pickremaining = 0;
+	    double moveremaining = 0;
+	    if (s.contains("pickremaining"))
+			pickremaining = s.getLiteral("pickremaining").getDouble();
+		if (s.contains("moveremaining"))
+			moveremaining = s.getLiteral("moveremaining").getDouble();
 	    if (topoi[y][x] == null) {
 		topoi[y][x] = new Topos();
 	    }
 
 	    Transporter t = new Transporter();
-	    t.TimeToPickup = remaining;
+	    t.TimeToPickup = pickremaining;
+	    t.TimeToMove = moveremaining;
 	    topoi[y][x].Transporter = t;
 	});
     }
@@ -200,16 +226,28 @@ public class JSON_Serializer {
 	    + "                } GROUP BY ?m }\n"
 	    + "}";
 
-    private final String getTransporters = "PREFIX ex:<http://example.org/>\n"
-	    + "PREFIX pos: <http://example.org/property/position#>\n"
-	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT DISTINCT ?t ?x ?y ?remaining WHERE\n"
-	    + "    { \n"
-	    + "        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] .\n"
-	    + "        OPTIONAL {\n"
-	    + "            ?t ex:queue [a ex:PickUpTask ; ex:endTime ?end ] .\n"
-	    + "            BIND(NOW() as ?now)\n"
-	    + "            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?remaining )\n"
-	    + "        }        \n"
-	    + "    }";
+    private final String getTransporters = "PREFIX ex:<http://example.org/>\n" +
+			"PREFIX pos: <http://example.org/property/position#>\n" +
+			"PREFIX st:  <http://example.org/stigld/>\n" +
+			"SELECT DISTINCT ?t ?x ?y ?pickremaining ?moveremaining WHERE \n" +
+			"{  \n" +
+			"        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] . \n" +
+			"        OPTIONAL { \n" +
+			"            ?t ex:queue [a ex:PickUpTask ; ex:endTime ?end ] . \n" +
+			"            BIND(NOW() as ?now) \n" +
+			"            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?pickremaining ) \n" +
+			"        }    \n" +
+			"        OPTIONAL { \n" +
+			"            ?t ex:queue [a ex:MoveTask ; ex:endTime ?end ] . \n" +
+			"            BIND(NOW() as ?now) \n" +
+			"            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?moveremaining ) \n" +
+			"        }    \n" +
+			"}     ";
+    private final String getOutputPorts ="PREFIX pos: <http://example.org/property/position#>" +
+			"PREFIX ex:<http://example.org/>" +
+			"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+			"SELECT ?op ?x ?y\n" +
+			"WHERE{\n" +
+			"    ?op a ex:Port ;  ex:located [ pos:xPos ?x ; pos:yPos ?y ] .\n" +
+			"}";
 }
