@@ -116,7 +116,7 @@ public class JSON_Serializer {
 	r.forEachRemaining(s -> {
 	    int x = s.getLiteral("x").getInt();
 	    int y = s.getLiteral("y").getInt();
-	    double level = s.getLiteral("lvl").getDouble();
+	    double level = s.getLiteral("total").getDouble();
 
 	    if (topoi[y][x] == null) {
 		topoi[y][x] = new Topos();
@@ -204,7 +204,16 @@ public class JSON_Serializer {
     private final String getDiffusion = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT ?x ?y ?lvl  WHERE { ?s a st:Topos ; pos:xPos ?x ; pos:yPos ?y ; st:carries [ a ex:DiffusionTrace; st:level ?lvl ] }";
+	    + "SELECT  ?x ?y (SUM(?lvl) as ?total) where {\n" +
+			"  ?s a st:Topos;\n" +
+			"    pos:xPos ?x;\n" +
+			"    pos:yPos ?y;\n" +
+			"    st:carries ?stigma.\n" +
+			"  \n" +
+			"  ?stigma a ex:DiffusionTrace;\n" +
+			"          st:level ?lvl.\n" +
+			"} \n" +
+			"group by ?s ?x ?y";
 
     private final String getMachines = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
