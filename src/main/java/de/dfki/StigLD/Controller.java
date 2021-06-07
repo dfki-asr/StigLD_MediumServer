@@ -5,8 +5,18 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.io.IOUtils;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.rdfconnection.RDFConnectionFactory;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
@@ -61,6 +71,14 @@ public class Controller {
         model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
 	return new JSON_Serializer().getModelAsJson(model);
     }
+
+
+    @PostMapping("/updatedDiffusion")
+    public String query1(@RequestBody String query) throws IOException, UnirestException {
+
+        return  "Hello";
+    }
+
 
     @PostMapping("/query")
     public String query(@RequestBody String query) throws IOException, UnirestException {
@@ -126,10 +144,11 @@ public class Controller {
                 .header("Content-Type", "application/sparql-update")
                 .body(evolve)
                 .asString();
-        HttpResponse<String> response2 = Unirest.post("http://localhost:3230/ds/")
-                .header("Content-Type", "application/sparql-update")
-                .body(diff_evolve)
-                .asString();
+        d_evolve();
+//        HttpResponse<String> response2 = Unirest.post("http://localhost:3230/ds/")
+//                .header("Content-Type", "application/sparql-update")
+//                .body(diff_evolve)
+//                .asString();
         HttpResponse<String> response3 = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-update")
                 .body(deleteStigma)
@@ -241,49 +260,138 @@ public class Controller {
             + "		?topos a st:Topos ; st:carries [a st:Stigma , ex:DiffusionTrace; st:level ?lvl ; ex:diffusionSource ?source ].\n"
             + "	} GROUP BY ?topos ?source }\n"
             + "};\n"
-        + "################### REMOVE STRAY BLANK NODES##############\n"
-        +"DELETE \n"
-        +"{\n"
-        +" ?o  ex:diffusionSource  ?o1  . \n"
-        +"}\n"
-        +"WHERE {\n"
-        +"        ?o  ex:diffusionSource  ?o1  .\n"
-        +"        FILTER (isBlank(?o)) \n"
-        +"        FILTER NOT EXISTS{?o ^st:carries ?t}\n"
-        +"}";
+            + "################### REMOVE STRAY BLANK NODES##############\n"
+            +"DELETE \n"
+            +"{\n"
+            +" ?o  ex:diffusionSource  ?o1  . \n"
+            +"}\n"
+            +"WHERE {\n"
+            +"        ?o  ex:diffusionSource  ?o1  .\n"
+            +"        FILTER (isBlank(?o)) \n"
+            +"        FILTER NOT EXISTS{?o ^st:carries ?t}\n"
+            +"}";
 
-        String diff_evolve2 = "prefix ord:   <http://example.org/orders#>\n" +
-                "prefix st:    <http://example.org/stigld/>\n" +
-                "prefix task:  <http://example.org/tasks#>\n" +
-                "prefix ex:    <http://example.org/>\n" +
-                "prefix pos:   <http://example.org/property/position#>\n" +
-                "prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "prefix xsd:   <http://www.w3.org/2001/XMLSchema#>\n" +
-                "prefix en:    <http://example.org/entities#>\n" +
-                "PREFIX stigFN: <http://www.dfki.de/func#>\n" +
-                "prefix topos: <http://example.org/gridPoint/>\n" +
-                "prefix law:   <http://example.org/rules#>\n" +
-                "SELECT  ?time ?time2 ?x ?y ?duration ?conc ?rate ?diffusion WHERE{\n" +
-                "  ?mach a ex:Artifact, ex:ProductionArtifact;\n" +
-                "        ex:located ?toposMach;\n" +
-                "        ex:outputPort ?output.\n" +
+    public void d_evolve()
+    {
+        String get =   "    PREFIX ex:<http://example.org/>\n" +
+                "    PREFIX pos: <http://example.org/property/position#>\n" +
+                "    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+                "    PREFIX st:  <http://example.org/stigld/>\n" +
+                "    PREFIX stigFN: <http://www.dfki.de/func#>\n" +
+                "    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                "    SELECT ?dist ?diffusion\n" +
+                "    WHERE {\n" +
+                "        {\n" +
+                "            SELECT  DISTINCT ?then ?dist ?srcLevel ?decay\n" +
+                "            {\n" +
+                "                ?source  a st:Topos; pos:xPos ?source_x; pos:yPos ?source_y; st:carries ?stigma.\n" +
+                "                ?stigma a ex:TransportStigma; st:created ?then; st:decayRate ?decay ; st:level ?srcLevel .\n" +
+                "                ?aoe  a st:Topos;    pos:xPos ?effect_x;    pos:yPos ?effect_y.\n" +
+                "                BIND(abs(?effect_x-?source_x) + abs(?effect_y-?source_y) AS ?dist)\n" +
+                "            }\n" +
+                "        }\n" +
+                "        BIND(NOW() AS ?now)\n" +
+                "        BIND(stigFN:duration_secs(?then, ?now) AS ?duration)\n" +
+                "        \n" +
+                "        BIND(stigFN:diffusion_1D(?dist, ?duration, ?srcLevel, ?decay) AS ?diffusion)\n" +
+                "        FILTER(?dist >= 0 && ?dist < 10 )\n" +
+                "    } order by asc (?dist)\n";
+        String url = "http://localhost:" + 3230 + "/ds/";
+        double output[] = new double[10];
+        int i = 0;
+        try ( QueryExecution qExec = QueryExecutionFactory.sparqlService(url, get) ) {
+            ResultSet rs = qExec.execSelect() ;
+//            ResultSetFormatter.out(rs);
+            for ( ; rs.hasNext() ; )
+            {
+                QuerySolution soln = rs.nextSolution() ;
+                RDFNode p = soln.get("diffusion") ; // "x" is a variable in the query
+                if ( p.isLiteral() )
+                {
+                    output[i]  = (double)((Literal)p).getValue();
+                }
+                String upd = getUpdate(output[0], output[i], i++);
+//                System.out.println(output[0]+"----------"+output[i++]);
+                RDFConnection conn = RDFConnectionFactory.connect(url);
+                UpdateRequest request = UpdateFactory.create(upd);
+                conn.update(request);
+            }
+        }
+    }
+
+    public String getUpdate(double k, double m, double dist){
+        String re = "    PREFIX ex:<http://example.org/>\n" +
+                "    PREFIX pos: <http://example.org/property/position#>\n" +
+                "    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+                "    PREFIX st:  <http://example.org/stigld/>\n" +
+                "    PREFIX stigFN: <http://www.dfki.de/func#>\n" +
+                "    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "\n" +
-                "  ?output a ex:Port;\n" +
-                "       ex:located ?toposOutput.\n" +
+                "    ########## REMOVE OLD DIFFUSION TRACES\n" +
                 "\n" +
-                "  ?toposOutput a st:Topos;\n" +
-                "               pos:xPos ?x;\n" +
-                "               pos:yPos ?y;\n" +
-                "               st:carries ?stigma.\n" +
+                "    DELETE {\n" +
+                "        ?existing st:carries ?ex .\n" +
+                "        ?ex a st:DiffusionTrace ; ?p ?o .\n" +
+                "    }\n" +
+                "    WHERE{\n" +
+                "        ?existing st:carries ?ex .\n" +
+                "        ?ex a st:DiffusionTrace ; ?p ?o .\n" +
+                "        FILTER(isBlank(?ex))\n" +
+                "    } ;\n" +
                 "\n" +
-                "  ?stigma a ex:TransportStigma, st:Stigma;\n" +
-                "          st:created ?time;\n" +
-                "          st:decayRate ?rate;\n" +
-                "          st:level ?conc.\n" +
-                "  BIND(NOW() AS ?time2)\n" +
-                "  BIND(stigFN:duration_sec(?time, ?time2) AS ?duration)\n" +
-                "  BIND(stigFN:diffusion_1D(?duration, ?conc, ?rate) AS ?diffusion)\n" +
-                "}";
+                "    ########## ADD NEW DIFFUSION TRACES\n" +
+                "\n" +
+                "    DELETE {\n" +
+                "        ?stigma st:level ?srcLevel .\n" +
+                "    }\n" +
+                "    INSERT {\n" +
+                "        ?aoe st:carries [ a st:Stigma , ex:DiffusionTrace ; st:level ?diffusion ; ex:diffusionSource ?source ] .\n" +
+                "        ?stigma st:level ?sourceDiffusion .\n" +
+                "    }\n" +
+                "    WHERE {\n" +
+                "\n" +
+                "        ?source  a st:Topos; pos:xPos ?source_x; pos:yPos ?source_y; st:carries ?stigma.\n" +
+                "        ?stigma a ex:TransportStigma; st:created ?then; st:decayRate ?decay ; st:level ?srcLevel .\n" +
+                "        ?aoe  a st:Topos;    pos:xPos ?effect_x;    pos:yPos ?effect_y.\n" +
+                "\n" +
+                "        BIND(NOW() AS ?now)\n" +
+                "        BIND(stigFN:duration_secs(?then, ?now) AS ?duration)\n" +
+                "        BIND(abs(?effect_x-?source_x) + abs(?effect_y-?source_y) AS ?dist)\n" +
+                "        BIND("+k+ " AS ?sourceDiffusion)\n" +
+                "        BIND("+m+ " AS ?diffusion)\n" +
+                "        FILTER(?dist = "+dist+")\n" +
+                "    } ;\n" +
+                "\n" +
+                "    ########## AGGREGATE DIFFUSION TRACES FROM SAME SOURCES\n" +
+                "\n" +
+                "    DELETE {\n" +
+                "        ?topos st:carries ?old .\n" +
+                "        ?old a st:Stigma , ex:DiffusionTrace ; st:level ?oldLevel .\n" +
+                "    }\n" +
+                "    INSERT {\n" +
+                "        ?topos st:carries ?stigma .\n" +
+                "        ?stigma a st:Stigma , ex:DiffusionTrace ; st:level ?c ; ex:diffusionSource ?source.\n" +
+                "    }\n" +
+                "    WHERE {\n" +
+                "        ?topos st:carries ?old .\n" +
+                "        ?old a st:Stigma , ex:DiffusionTrace ; st:level ?oldLevel ; ex:diffusionSource ?source .\n" +
+                "      FILTER(isBlank(?old))\n" +
+                "        {SELECT (SUM(?lvl) as ?c) (BNODE() as ?stigma) ?topos ?source WHERE {\n" +
+                "            ?topos a st:Topos ; st:carries [a st:Stigma , ex:DiffusionTrace; st:level ?lvl ; ex:diffusionSource ?source ].\n" +
+                "        } GROUP BY ?topos ?source }\n" +
+                "    };\n" +
+                "    ################### REMOVE STRAY BLANK NODES##############\n" +
+                "    DELETE\n" +
+                "    {\n" +
+                "     ?o  ex:diffusionSource  ?o1  .\n" +
+                "    }\n" +
+                "    WHERE {\n" +
+                "            ?o  ex:diffusionSource  ?o1  .\n" +
+                "            FILTER (isBlank(?o))\n" +
+                "            FILTER NOT EXISTS{?o ^st:carries ?t}\n" +
+                "    }";
+        return re;
+    }
 
             public String getAllTriples = "prefix ord:   <http://example.org/orders#>\n" +
                     "prefix st:    <http://example.org/stigld/> \n" +
