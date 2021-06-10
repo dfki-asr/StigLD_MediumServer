@@ -121,7 +121,6 @@ public class Controller {
 
     @PostMapping("/evolve")
     public String evolve(@RequestBody String query) throws IOException, UnirestException {
-        System.out.println(query);
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-update")
@@ -144,11 +143,11 @@ public class Controller {
                 .header("Content-Type", "application/sparql-update")
                 .body(evolve)
                 .asString();
-        d_evolve();
-//        HttpResponse<String> response2 = Unirest.post("http://localhost:3230/ds/")
-//                .header("Content-Type", "application/sparql-update")
-//                .body(diff_evolve)
-//                .asString();
+//        d_evolve();
+        HttpResponse<String> response2 = Unirest.post("http://localhost:3230/ds/")
+                .header("Content-Type", "application/sparql-update")
+                .body(diff_evolve)
+                .asString();
         HttpResponse<String> response3 = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-update")
                 .body(deleteStigma)
