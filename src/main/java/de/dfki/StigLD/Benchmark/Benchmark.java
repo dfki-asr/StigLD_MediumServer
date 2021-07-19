@@ -21,19 +21,23 @@ import org.apache.jena.query.QueryFactory;
 public class Benchmark {
 
     private int stepCounter = 0;
-    String endpoint;
+    String endpoint = "http://localhost:3230/ds/";
     ScenarioStatistics scenarioStatistics = new ScenarioStatistics();
     ObjectMapper mapper = new ObjectMapper();
+    private boolean initialized = false;
 
     public Benchmark() {
     }
 
-    public void init(String endpoint) {
-	this.endpoint = endpoint;
+    public void init() {
 	scenarioStatistics.read(endpoint);
+	initialized = true;
     }
 
     public void measure() {
+	if (!initialized) {
+	    init();
+	}
 	stepCounter++;
 	/// send benchmarking queries
 	Transporter.countTransporterSteps(endpoint);
