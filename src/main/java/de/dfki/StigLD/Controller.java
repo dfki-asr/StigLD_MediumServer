@@ -4,6 +4,7 @@ package de.dfki.StigLD;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import de.dfki.StigLD.Benchmark.Benchmark;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -428,53 +429,5 @@ public class Controller {
                     "    FILTER (isBlank(?stigma))\n" +
                     "    FILTER(?lvl=0)\n" +
                     "}";
-
-            public String open_orders = "prefix ex:    <http://example.org/>\n" +
-                    "\n" +
-                    "ASK {\n" +
-                    "  {SELECT ?order WHERE { ?order a  ex:Order . }}\n" +
-                    "  UNION {SELECT ?pickup WHERE { ?pickup a ex:PickupTask . }}\n" +
-                    "  UNION {SELECT ?work WHERE { ?work a ex:WorkstationTask  . }}\n" +
-                    "}\n";
-
-            public String count_artifacts = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                    "prefix ex:    <http://example.org/>\n" +
-                    "prefix :      <http://example.org/benchmark/>\n" +
-                    "\n" +
-                    "CONSTRUCT {\n" +
-                    "      :numMachines  rdf:value ?n_w .\n" +
-                    "      :numTransporters rdf:value ?n_t .\n" +
-                    "      :numOrders rdf:value ?n_o .\n" +
-                    "}\n" +
-                    "\n" +
-                    "WHERE {\n" +
-                    "\n" +
-                    "  {SELECT (COUNT(?w) as ?n_w ) {\n" +
-                    "      ?w a ex:ProductionArtifact .\n" +
-                    "  }}\n" +
-                    "  {SELECT (COUNT(?t) as ?n_t ) {\n" +
-                    "      ?t a ex:Transporter .\n" +
-                    "  }}\n" +
-                    "  {SELECT (COUNT(?o) as ?n_o ) {\n" +
-                    "      ?o a ex:Order .\n" +
-                    "  }}\n" +
-                    "}\n";
-
-            public String transporter_pos = "PREFIX ex:<http://example.org/>\n" +
-                    "PREFIX st:    <http://example.org/stigld/>\n" +
-                    "PREFIX pos:   <http://example.org/property/position#>\n" +
-                    "\n" +
-                    "SELECT ?t ?x ?y WHERE {\n" +
-                    "  ?t a ex:Transporter ; ex:located [ a st:Topos ; pos:xPos ?x ; pos:yPos ?y ] .\n" +
-                    "}\n";
-
-            public String workstation_tasks = "PREFIX ex:<http://example.org/>\n" +
-                    "\n" +
-                    "SELECT * WHERE {\n" +
-                    "  {SELECT ?machine (COUNT(?task) as ?n) WHERE {\n" +
-                    "      ?machine a ex:ProductionArtifact ;\n" +
-                    "      ex:queue ?task.\n" +
-                    "      ?task a ex:WorkstationTask .\n" +
-                    "  } GROUP BY ?machine }\n" +
-                    "}\n";
+           
 }
