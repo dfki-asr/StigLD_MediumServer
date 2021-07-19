@@ -26,6 +26,9 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/sparql/")
 public class Controller {
+
+    private Benchmark benchmark = new Benchmark();
+
     @GetMapping("/getModel")
     public String getModel() throws IOException, UnirestException {
         initEvolve();
@@ -108,7 +111,8 @@ public class Controller {
                 .header("Content-Type", "application/sparql-update")
                 .body(query)
                 .asString();
-        /// send benchmarking queries
+
+	benchmark.measure();
         String resp;
         try{
             resp = response.getBody().toString();
@@ -120,6 +124,7 @@ public class Controller {
         }
         return  resp;
     }
+
 
     @PostMapping("/evolve")
     public String evolve(@RequestBody String query) throws IOException, UnirestException {
