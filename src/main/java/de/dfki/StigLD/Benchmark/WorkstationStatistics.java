@@ -15,7 +15,7 @@ import java.util.Set;
 public class WorkstationStatistics {
 
     public int maxLoad = 0;
-    public int currentLoad = 0;
+    private int currentLoad = 0;
     public int totalLoad = 0;
 
     private final Set<String> assignedTasks = new HashSet<>();
