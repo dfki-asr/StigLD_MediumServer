@@ -16,6 +16,7 @@ public class Queries {
                     "  {SELECT ?order WHERE { ?order a  ex:Order . }}\n" +
                     "  UNION {SELECT ?pickup WHERE { ?pickup a ex:PickupTask . }}\n" +
                     "  UNION {SELECT ?work WHERE { ?work a ex:WorkstationTask  . }}\n" +
+                    "UNION {SELECT ?product WHERE { ?product a ex:Product  . }}\n" +
                     "}\n";
 
             public static String count_artifacts = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
