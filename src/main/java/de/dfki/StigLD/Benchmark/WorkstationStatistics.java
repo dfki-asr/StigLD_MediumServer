@@ -5,6 +5,7 @@
  */
 package de.dfki.StigLD.Benchmark;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,8 @@ import java.util.Set;
 public class WorkstationStatistics {
 
     public int maxLoad = 0;
-    private int currentLoad = 0;
+    @JsonIgnore
+    public int currentLoad = 0;
     public int totalLoad = 0;
 
     private final Set<String> assignedTasks = new HashSet<>();
