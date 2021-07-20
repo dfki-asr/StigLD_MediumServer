@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 
 @RestController
@@ -108,11 +110,13 @@ public class Controller {
     public String postUpdate(@RequestBody String query) throws IOException, UnirestException {
         initEvolve();
         Unirest.setTimeouts(0, 0);
+	LocalDateTime before = LocalDateTime.now();
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-update")
                 .body(query)
                 .asString();
-
+	LocalDateTime after = LocalDateTime.now();
+	benchmark.lastQueryTime(before.until(after, ChronoUnit.MILLIS));
 	benchmark.measure();
         String resp;
         try{
