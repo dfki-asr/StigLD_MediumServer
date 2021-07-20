@@ -48,7 +48,7 @@ public class Queries {
 		    "\n" +
 		    "SELECT ?ws ?startTime WHERE {\n" +
 		    "      ?ws a ex:ProductionArtifact ;   ex:queue ?task.    \n" +
-		    "      ?task a ex:WorkstationTask ; ex:StartTime ?startTime .\n" +
+		    "      ?task a ex:WorkstationTask ; ex:startTime ?startTime .\n" +
 		    "}";
 
 	    public static String workstation_task_counts = "PREFIX ex:<http://example.org/>\n" +
