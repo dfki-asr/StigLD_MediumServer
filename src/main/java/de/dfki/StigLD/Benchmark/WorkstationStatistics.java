@@ -5,17 +5,36 @@
  */
 package de.dfki.StigLD.Benchmark;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  *
  * @author tospie
  */
 public class WorkstationStatistics {
 
-    public int currentLoad;
-    public int maxLoad;
+    int maxLoad = 0;
+    int currentLoad = 0;
+    int totalLoad = 0;
 
-    public WorkstationStatistics(int current, int max) {
-	this.currentLoad = current;
-	this.maxLoad = max;
+    private final Set<String> assignedTasks = new HashSet<>();
+
+    public WorkstationStatistics() {
+    }
+
+    public WorkstationStatistics(int currentLoad, int maxLoad) {
+	this.maxLoad = maxLoad;
+	this.currentLoad = currentLoad;
+    }
+
+    public void putTask(String startTime) {
+	if (!assignedTasks.contains(startTime)) {
+	    assignedTasks.add(startTime);
+	}
+    }
+
+    public int TaskCount() {
+	return assignedTasks.size();
     }
 }

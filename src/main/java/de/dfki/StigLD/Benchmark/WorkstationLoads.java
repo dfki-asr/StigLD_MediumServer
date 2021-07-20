@@ -21,13 +21,36 @@ public class WorkstationLoads {
     public static Map<String, WorkstationStatistics> Statistics = new HashMap<>();
 
     public static void getWorkstationStatistics(String endpoint) {
+	getCurrentTaskLists(endpoint);
+	readCurrentLoads(endpoint);
+	updateTotalTasks();
+    }
+
+    private static void getCurrentTaskLists(String endpoint) {
 	ResultSet results = QueryExecutionFactory.sparqlService(endpoint, QueryFactory.create(Queries.workstation_tasks)).execSelect();
 	while (results.hasNext()) {
-	    updateWorkstation(results.next());
+	    QuerySolution n = results.next();
+	    String wsUri = n.getResource("ws").getLocalName();
+	    String taskStartTime = n.getLiteral("startTime").getString();
+	    WorkstationStatistics s = Statistics.getOrDefault(wsUri, new WorkstationStatistics());
+	    s.putTask(taskStartTime);
 	}
     }
 
-    private static void updateWorkstation(QuerySolution n) {
+    private static void updateTotalTasks() {
+	Statistics.values().forEach((ws) -> {
+	    ws.totalLoad = ws.TaskCount();
+	});
+    }
+
+    private static void readCurrentLoads(String endpoint) {
+	ResultSet results = QueryExecutionFactory.sparqlService(endpoint, QueryFactory.create(Queries.workstation_task_counts)).execSelect();
+	while (results.hasNext()) {
+	    updateMaxLoads(results.next());
+	}
+    }
+
+    private static void updateMaxLoads(QuerySolution n) {
 	String wsUri = n.getResource("machine").getLocalName();
 	int currentLoad = n.getLiteral("n").getInt();
 	WorkstationStatistics old = Statistics.getOrDefault(wsUri, new WorkstationStatistics(currentLoad, currentLoad));
