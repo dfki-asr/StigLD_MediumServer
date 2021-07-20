@@ -32,7 +32,10 @@ public class WorkstationLoads {
 	    QuerySolution n = results.next();
 	    String wsUri = n.getResource("ws").getLocalName();
 	    String taskStartTime = n.getLiteral("startTime").getString();
-	    WorkstationStatistics s = Statistics.getOrDefault(wsUri, new WorkstationStatistics());
+	    if (!Statistics.containsKey(wsUri)) {
+		Statistics.put(wsUri, new WorkstationStatistics());
+	    }
+	    WorkstationStatistics s = Statistics.get(wsUri);
 	    s.putTask(taskStartTime);
 	}
     }
@@ -53,8 +56,11 @@ public class WorkstationLoads {
     private static void updateMaxLoads(QuerySolution n) {
 	String wsUri = n.getResource("machine").getLocalName();
 	int currentLoad = n.getLiteral("n").getInt();
-	WorkstationStatistics old = Statistics.getOrDefault(wsUri, new WorkstationStatistics(currentLoad, currentLoad));
-	WorkstationStatistics current = new WorkstationStatistics(currentLoad, currentLoad > old.maxLoad ? currentLoad : old.maxLoad);
-	Statistics.put(wsUri, current);
+	if (!Statistics.containsKey(wsUri)) {
+	    Statistics.put(wsUri, new WorkstationStatistics());
+	}
+	WorkstationStatistics ws = Statistics.get(wsUri);
+	ws.currentLoad = currentLoad;
+	ws.maxLoad = currentLoad > ws.maxLoad ? currentLoad : ws.maxLoad;
     }
 }
