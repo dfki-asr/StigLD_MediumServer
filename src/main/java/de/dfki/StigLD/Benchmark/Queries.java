@@ -43,13 +43,20 @@ public class Queries {
                     "  ?t a ex:Transporter ; ex:located [ a st:Topos ; pos:xPos ?x ; pos:yPos ?y ] .\n" +
                     "}\n";
 
-            public static String workstation_tasks = "PREFIX ex:<http://example.org/>\n" +
-                    "\n" +
-                    "SELECT * WHERE {\n" +
-                    "  {SELECT ?machine (COUNT(?task) as ?n) WHERE {\n" +
-                    "      ?machine a ex:ProductionArtifact ;\n" +
-                    "      ex:queue ?task.\n" +
-                    "      ?task a ex:WorkstationTask .\n" +
-                    "  } GROUP BY ?machine }\n" +
-                    "}\n";
+	    public static String workstation_tasks = "PREFIX ex:<http://example.org/>\n" +
+		    "\n" +
+		    "SELECT ?ws ?startTime WHERE {\n" +
+		    "      ?ws a ex:ProductionArtifact ;   ex:queue ?task.    \n" +
+		    "      ?task a ex:WorkstationTask ; ex:StartTime ?startTime .\n" +
+		    "}";
+
+	    public static String workstation_task_counts = "PREFIX ex:<http://example.org/>\n" +
+		    "\n" +
+		    "SELECT * WHERE {\n" +
+		    "  {SELECT ?machine (COUNT(?task) as ?n) WHERE {\n" +
+		    "      ?machine a ex:ProductionArtifact ;\n" +
+		    "      ex:queue ?task.\n" +
+		    "      ?task a ex:WorkstationTask .\n" +
+		    "  } GROUP BY ?machine }\n" +
+		    "}";
 }
