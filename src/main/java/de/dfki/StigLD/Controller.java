@@ -34,7 +34,7 @@ public class Controller {
 
     @GetMapping("/getModel")
     public String getModel() throws IOException, UnirestException {
-        initEvolve();
+        //initEvolve();
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-query")
@@ -58,7 +58,7 @@ public class Controller {
     }
     @GetMapping(value="/json", produces="application/json")
     public String json() throws IOException, UnirestException {
-        initEvolve();
+        //initEvolve();
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-query")
