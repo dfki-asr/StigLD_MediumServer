@@ -7,6 +7,8 @@ package de.dfki.StigLD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -20,8 +22,36 @@ import org.apache.jena.rdf.model.Model;
  */
 public class JSON_Serializer {
 
-    private Topos[][] topoi;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    ResponseObject response;
+
+    public class ResponseObject {
+
+	@Getter
+	private final Topos[][] topoi;
+
+	@Getter
+	private final Set<Order> orders = new HashSet<>();
+
+	public ResponseObject(int x_size, int y_size) {
+	    this.topoi = new Topos[y_size][x_size];
+	}
+    }
+
+    public class Order {
+
+	@Getter
+	String id;
+
+	@Getter
+	String timestamp;
+
+	public Order(String id, String timestamp) {
+	    this.id = id;
+	    this.timestamp = timestamp;
+	}
+    }
 
     public class Topos {
 
@@ -45,6 +75,7 @@ public class JSON_Serializer {
     }
 
     public class Machine {
+
 	@Getter
 	int Orders;
 	@Getter
@@ -67,15 +98,26 @@ public class JSON_Serializer {
 	QuerySolution solution = r.next();
 	int x = solution.getLiteral("max_x").getInt() + 1;
 	int y = solution.getLiteral("max_y").getInt() + 1;
+	response = new ResponseObject(x, y);
 
-	topoi = new Topos[y][x];
+	setOrders(model);
 	setNegativeFeedback(model);
 	setTransport(model);
 	setDiffusion(model);
 	setMachines(model);
 	setTransporters(model);
 	setOutputPorts(model);
-	return objectMapper.writeValueAsString(topoi);
+	return objectMapper.writeValueAsString(response);
+    }
+
+    private void setOrders(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getOrders, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(o -> {
+	    String id = o.getResource("order").getLocalName();
+	    String timestamp = o.getLiteral("timestamp").getString();
+	    response.orders.add(new Order(id, timestamp));
+	});
     }
 
     private void setNegativeFeedback(Model model) {
@@ -86,11 +128,11 @@ public class JSON_Serializer {
 	    int y = s.getLiteral("y").getInt();
 	    double level = s.getLiteral("lvl").getDouble();
 
-	    if (topoi[y][x] == null) {
-		topoi[y][x] = new Topos();
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
 	    }
 
-	    topoi[y][x].NegFeedback = level;
+	    response.topoi[y][x].NegFeedback = level;
 	});
     }
 
@@ -102,11 +144,11 @@ public class JSON_Serializer {
 	    int y = s.getLiteral("y").getInt();
 	    double level = s.getLiteral("lvl").getDouble();
 
-	    if (topoi[y][x] == null) {
-		topoi[y][x] = new Topos();
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
 	    }
 
-	    topoi[y][x].TransportStigma = level;
+	    response.topoi[y][x].TransportStigma = level;
 	});
     }
 
@@ -118,11 +160,11 @@ public class JSON_Serializer {
 	    int y = s.getLiteral("y").getInt();
 	    double level = s.getLiteral("total").getDouble();
 
-	    if (topoi[y][x] == null) {
-		topoi[y][x] = new Topos();
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
 	    }
 
-	    topoi[y][x].DiffusionTrace = level;
+	    response.topoi[y][x].DiffusionTrace = level;
 	});
     }
 
@@ -135,32 +177,31 @@ public class JSON_Serializer {
 	    int scheduled = s.getLiteral("scheduled").getInt();
 	    int waiting = s.getLiteral("waiting").getInt();
 
-	    if (topoi[y][x] == null) {
-		topoi[y][x] = new Topos();
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
 	    }
 
 	    Machine m = new Machine();
 	    m.Orders = scheduled;
 	    m.Waiting = waiting;
-	    topoi[y][x].Machine = m;
+	    response.topoi[y][x].Machine = m;
 	});
     }
 
-	private void setOutputPorts(Model model) {
-		QueryExecution q = QueryExecutionFactory.create(getOutputPorts, model);
-		ResultSet r = q.execSelect();
-		r.forEachRemaining(s -> {
-			int x = s.getLiteral("x").getInt();
-			int y = s.getLiteral("y").getInt();
+    private void setOutputPorts(Model model) {
+	QueryExecution q = QueryExecutionFactory.create(getOutputPorts, model);
+	ResultSet r = q.execSelect();
+	r.forEachRemaining(s -> {
+	    int x = s.getLiteral("x").getInt();
+	    int y = s.getLiteral("y").getInt();
 
-			if (topoi[y][x] == null) {
-				topoi[y][x] = new Topos();
-			}
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
+	    }
 
-
-			topoi[y][x].outputPort = true;
-		});
-	}
+	    response.topoi[y][x].outputPort = true;
+	});
+    }
 
     private void setTransporters(Model model) {
 	QueryExecution q = QueryExecutionFactory.create(getTransporters, model);
@@ -171,18 +212,20 @@ public class JSON_Serializer {
 	    int y = s.getLiteral("y").getInt();
 	    double pickremaining = 0;
 	    double moveremaining = 0;
-	    if (s.contains("pickremaining"))
-			pickremaining = s.getLiteral("pickremaining").getDouble();
-		if (s.contains("moveremaining"))
-			moveremaining = s.getLiteral("moveremaining").getDouble();
-	    if (topoi[y][x] == null) {
-		topoi[y][x] = new Topos();
+	    if (s.contains("pickremaining")) {
+		pickremaining = s.getLiteral("pickremaining").getDouble();
+	    }
+	    if (s.contains("moveremaining")) {
+		moveremaining = s.getLiteral("moveremaining").getDouble();
+	    }
+	    if (response.topoi[y][x] == null) {
+		response.topoi[y][x] = new Topos();
 	    }
 
 	    Transporter t = new Transporter();
 	    t.TimeToPickup = pickremaining;
 	    t.TimeToMove = moveremaining;
-	    topoi[y][x].Transporter = t;
+	    response.topoi[y][x].Transporter = t;
 	});
     }
 
@@ -204,16 +247,16 @@ public class JSON_Serializer {
     private final String getDiffusion = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT  ?x ?y (SUM(?lvl) as ?total) where {\n" +
-			"  ?s a st:Topos;\n" +
-			"    pos:xPos ?x;\n" +
-			"    pos:yPos ?y;\n" +
-			"    st:carries ?stigma.\n" +
-			"  \n" +
-			"  ?stigma a ex:DiffusionTrace;\n" +
-			"          st:level ?lvl.\n" +
-			"} \n" +
-			"group by ?s ?x ?y";
+	    + "SELECT  ?x ?y (SUM(?lvl) as ?total) where {\n"
+	    + "  ?s a st:Topos;\n"
+	    + "    pos:xPos ?x;\n"
+	    + "    pos:yPos ?y;\n"
+	    + "    st:carries ?stigma.\n"
+	    + "  \n"
+	    + "  ?stigma a ex:DiffusionTrace;\n"
+	    + "          st:level ?lvl.\n"
+	    + "} \n"
+	    + "group by ?s ?x ?y";
 
     private final String getMachines = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
@@ -235,28 +278,35 @@ public class JSON_Serializer {
 	    + "                } GROUP BY ?m }\n"
 	    + "}";
 
-    private final String getTransporters = "PREFIX ex:<http://example.org/>\n" +
-			"PREFIX pos: <http://example.org/property/position#>\n" +
-			"PREFIX st:  <http://example.org/stigld/>\n" +
-			"SELECT DISTINCT ?t ?x ?y ?pickremaining ?moveremaining WHERE \n" +
-			"{  \n" +
-			"        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] . \n" +
-			"        OPTIONAL { \n" +
-			"            ?t ex:queue [a ex:PickUpTask ; ex:endTime ?end ] . \n" +
-			"            BIND(NOW() as ?now) \n" +
-			"            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?pickremaining ) \n" +
-			"        }    \n" +
-			"        OPTIONAL { \n" +
-			"            ?t ex:queue [a ex:MoveTask ; ex:endTime ?end ] . \n" +
-			"            BIND(NOW() as ?now) \n" +
-			"            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?moveremaining ) \n" +
-			"        }    \n" +
-			"}     ";
-    private final String getOutputPorts ="PREFIX pos: <http://example.org/property/position#>" +
-			"PREFIX ex:<http://example.org/>" +
-			"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-			"SELECT ?op ?x ?y\n" +
-			"WHERE{\n" +
-			"    ?op a ex:Port ;  ex:located [ pos:xPos ?x ; pos:yPos ?y ] .\n" +
-			"}";
+    private final String getTransporters = "PREFIX ex:<http://example.org/>\n"
+	    + "PREFIX pos: <http://example.org/property/position#>\n"
+	    + "PREFIX st:  <http://example.org/stigld/>\n"
+	    + "SELECT DISTINCT ?t ?x ?y ?pickremaining ?moveremaining WHERE \n"
+	    + "{  \n"
+	    + "        ?t a ex:Transporter ; ex:located [ pos:xPos ?x ; pos:yPos ?y] . \n"
+	    + "        OPTIONAL { \n"
+	    + "            ?t ex:queue [a ex:PickUpTask ; ex:endTime ?end ] . \n"
+	    + "            BIND(NOW() as ?now) \n"
+	    + "            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?pickremaining ) \n"
+	    + "        }    \n"
+	    + "        OPTIONAL { \n"
+	    + "            ?t ex:queue [a ex:MoveTask ; ex:endTime ?end ] . \n"
+	    + "            BIND(NOW() as ?now) \n"
+	    + "            BIND(IF(?now > ?end, 0, (hours(?end-?now) * 24 * 60 + minutes(?end-?now) * 60 + seconds(?end-?now) ) ) as ?moveremaining ) \n"
+	    + "        }    \n"
+	    + "}     ";
+    private final String getOutputPorts = "PREFIX pos: <http://example.org/property/position#>"
+	    + "PREFIX ex:<http://example.org/>"
+	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+	    + "SELECT ?op ?x ?y\n"
+	    + "WHERE{\n"
+	    + "    ?op a ex:Port ;  ex:located [ pos:xPos ?x ; pos:yPos ?y ] .\n"
+	    + "}";
+    private final String getOrders = "PREFIX pos: <http://example.org/property/position#>"
+	    + "PREFIX ex:<http://example.org/>"
+	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+	    + "SELECT ?order ?timestamp \n"
+	    + "WHERE{\n"
+	    + "    ?order a ex:Order ;  ex:created ?timestamp .\n"
+	    + "}";
 }
