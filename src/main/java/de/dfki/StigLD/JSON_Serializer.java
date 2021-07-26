@@ -7,8 +7,14 @@ package de.dfki.StigLD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.Getter;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -47,9 +53,14 @@ public class JSON_Serializer {
 	@Getter
 	String timestamp;
 
-	public Order(String id, String timestamp) {
+	public Order(String id, String timestamp) throws ParseException {
 	    this.id = id;
-	    this.timestamp = timestamp;
+            timestamp = timestamp.replace("T"," ");
+            SimpleDateFormat parser=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            Date date = parser.parse(timestamp.split("\\+")[0]);
+            SimpleDateFormat formatter = new SimpleDateFormat("dd MMM HH:mm:ss");
+            String formattedDate = formatter.format(date);
+            this.timestamp = formattedDate;
 	}
     }
 
@@ -116,7 +127,11 @@ public class JSON_Serializer {
 	r.forEachRemaining(o -> {
 	    String id = o.getResource("order").getLocalName();
 	    String timestamp = o.getLiteral("timestamp").getString();
-	    response.orders.add(new Order(id, timestamp));
+            try {
+                response.orders.add(new Order(id, timestamp));
+            } catch (ParseException ex) {
+                Logger.getLogger(JSON_Serializer.class.getName()).log(Level.SEVERE, null, ex);
+            }
 	});
     }
 
