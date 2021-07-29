@@ -52,8 +52,11 @@ public class JSON_Serializer {
 
 	@Getter
 	String timestamp;
+        
+        @Getter 
+        String status;
 
-	public Order(String id, String timestamp) throws ParseException {
+	public Order(String id, String timestamp, String status) throws ParseException {
 	    this.id = id;
             timestamp = timestamp.replace("T"," ");
             SimpleDateFormat parser=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -61,6 +64,13 @@ public class JSON_Serializer {
             SimpleDateFormat formatter = new SimpleDateFormat("dd MMM HH:mm:ss");
             String formattedDate = formatter.format(date);
             this.timestamp = formattedDate;
+            if(status.equals("unassigned"))
+                status = "Order created";
+            else if(status.equals("assigned"))
+                status = "In production";
+            else if(status.equals("pickup"))
+                status = "Completed, awaiting pickup";
+            this.status = status;
 	}
     }
 
@@ -127,8 +137,9 @@ public class JSON_Serializer {
 	r.forEachRemaining(o -> {
 	    String id = o.getResource("order").getLocalName();
 	    String timestamp = o.getLiteral("timestamp").getString();
+            String status = o.getLiteral("status").getString();
             try {
-                response.orders.add(new Order(id, timestamp));
+                response.orders.add(new Order(id, timestamp, status));
             } catch (ParseException ex) {
                 Logger.getLogger(JSON_Serializer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -320,8 +331,8 @@ public class JSON_Serializer {
     private final String getOrders = "PREFIX pos: <http://example.org/property/position#>"
 	    + "PREFIX ex:<http://example.org/>"
 	    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
-	    + "SELECT ?order ?timestamp \n"
+	    + "SELECT ?order ?timestamp ?status \n"
 	    + "WHERE{\n"
-	    + "    ?order a ex:Order ;  ex:created ?timestamp .\n"
-	    + "}";
+	    + "    ?order a ex:Order ;  ex:created ?timestamp; ex:status ?status .\n"
+	    + "} ORDER BY (?timestamp)";
 }
