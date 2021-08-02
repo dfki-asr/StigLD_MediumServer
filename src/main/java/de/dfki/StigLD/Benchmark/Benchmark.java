@@ -52,7 +52,9 @@ public class Benchmark {
     }
 
     public void lastQueryTime(long execTimeInMs) {
-	queryTimes.add(execTimeInMs);
+	synchronized(queryTimes){
+	    queryTimes.add(execTimeInMs);
+	}
     }
 
     private void checkDoneAndFinalize() {
@@ -73,7 +75,9 @@ public class Benchmark {
 	String basicStatistics = mapper.writeValueAsString(scenarioStatistics);
 	String transporterStatistics = mapper.writeValueAsString(Transporter.Statistics);
 	String workstationStatistics = mapper.writeValueAsString(WorkstationLoads.Statistics);
-	Collections.sort(queryTimes);
+	synchronized(queryTimes) {
+	    Collections.sort(queryTimes);
+	}
 	PrintWriter printWriter = new PrintWriter("logs/benchmark-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm")) + ".log");
 	printWriter.println("Scenario Setup: ");
 	printWriter.println(" ");
