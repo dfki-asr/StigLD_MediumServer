@@ -108,9 +108,9 @@ public class Controller {
 
     @PostMapping("/update")
     public String postUpdate(@RequestBody String query) throws IOException, UnirestException {
-        initEvolve();
-        Unirest.setTimeouts(0, 0);
 	LocalDateTime before = LocalDateTime.now();
+	initEvolve();
+        Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
                 .header("Content-Type", "application/sparql-update")
                 .body(query)
