@@ -60,4 +60,10 @@ public class Queries {
 		    "      ?task a ex:WorkstationTask .\n" +
 		    "  } GROUP BY ?machine }\n" +
 		    "}";
+
+	    public static String makeshift_times = "PREFIX ex:<http://example.org/>\n" +
+		    "\n" +
+		    "SELECT ?avg ?median ?min ?max WHERE {\n" +
+		    "      ex:MakeshifttimesStatistics ex:avg ?avg ; ex:median ?median ; ex:minMakeshift ?min ; ex:maxMakeshift ?max ." +
+		    "}";
 }
