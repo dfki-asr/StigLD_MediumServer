@@ -26,6 +26,7 @@ public class Benchmark {
     private int stepCounter = 0;
     String endpoint = "http://localhost:3230/ds/";
     ScenarioStatistics scenarioStatistics = new ScenarioStatistics();
+    MakeshiftStatistics makeshiftStatistics = new MakeshiftStatistics();
     ObjectMapper mapper = new ObjectMapper();
     List<Long> queryTimes = new ArrayList<>();
     private boolean initialized = false;
@@ -61,6 +62,7 @@ public class Benchmark {
 	try {
 	    if (!QueryExecutionFactory.sparqlService(endpoint, QueryFactory.create(Queries.open_orders)).execAsk()) {
 		System.out.println("[StigLD Benchmark] ------ FINISHED! ALL ORDERS PROCESSED ------ ");
+		makeshiftStatistics.read(endpoint);
 		writeResults();
 	    }
 	} catch (JsonProcessingException e) {
@@ -75,6 +77,7 @@ public class Benchmark {
 	String basicStatistics = mapper.writeValueAsString(scenarioStatistics);
 	String transporterStatistics = mapper.writeValueAsString(Transporter.Statistics);
 	String workstationStatistics = mapper.writeValueAsString(WorkstationLoads.Statistics);
+	String makeshift = mapper.writeValueAsString(makeshiftStatistics);
 	synchronized(queryTimes) {
 	    Collections.sort(queryTimes);
 	}
@@ -99,6 +102,9 @@ public class Benchmark {
 	printWriter.println("Workstation Statistics: ");
 	printWriter.println(" ");
 	printWriter.println(workstationStatistics);
+	printWriter.println("Makeshift Times: ");
+	printWriter.println(" ");
+	printWriter.println(makeshift);
 	printWriter.close();
     }
 
