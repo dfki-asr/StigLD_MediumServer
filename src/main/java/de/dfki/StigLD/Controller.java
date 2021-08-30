@@ -165,17 +165,15 @@ public class Controller {
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
             "\n" +
             "DELETE {\n" +
-            "  ?stigma a ex:NegFeedback ; ?p ?o .\n" +
-            "  ?topos st:carries ?stigma .\n" +
+            "  ?stigma st:created ?then ; st:level ?c_old .\n" +
             "}\n" +
             "  INSERT {\n" +
-            "  ?topos st:carries ?new .\n" +
-            "  ?new a st:Stigma, ex:NegFeedback ; st:level ?c ; st:created ?now ; st:decayRate ?d .\n" +
+            "  ?stigma st:level ?c ; st:created ?now .\n" +
             "}\n" +
             "WHERE {\n" +
             "  BIND(NOW() as ?now)\n" +
             "  ?topos a st:Topos ; st:carries ?stigma .\n" +
-            "  ?stigma a ex:NegFeedback ; st:decayRate ?d ; ?p ?o .\n" +
+            "  ?stigma a ex:NegFeedback ; st:decayRate ?d ; st:created ?then ; st:level ?c_old.\n" +
             "  FILTER (isBlank(?stigma))\n" +
             "\n" +
             "  {SELECT distinct ?topos (BNODE() as ?new) WHERE {\n" +
