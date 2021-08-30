@@ -5,6 +5,7 @@ import de.dfki.StigLD.json.JSON_Serializer;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import de.dfki.StigLD.json.JSON_Serializer_Ant;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -70,7 +71,8 @@ public class Controller {
         }
         Model model = ModelFactory.createDefaultModel();
         model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
-	return new JSON_Serializer().getModelAsJson(model);
+	//return new JSON_Serializer().getModelAsJson(model);
+	return new JSON_Serializer_Ant().getModelAsJson(model);
     }
 
 
