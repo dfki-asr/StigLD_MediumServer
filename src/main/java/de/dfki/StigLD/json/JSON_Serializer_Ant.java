@@ -173,7 +173,7 @@ public class JSON_Serializer_Ant {
 	    int carries = 0;
 
 	    if (s.contains("carries")) {
-		carries = s.getLiteral("pickremaining").getInt();
+		carries = s.getLiteral("carries").getInt();
 	    }
 
 	    if (response.topoi[y][x] == null) {
