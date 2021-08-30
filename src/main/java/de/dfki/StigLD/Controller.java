@@ -1,6 +1,7 @@
 package de.dfki.StigLD;
 
 
+import de.dfki.StigLD.json.JSON_Serializer;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
