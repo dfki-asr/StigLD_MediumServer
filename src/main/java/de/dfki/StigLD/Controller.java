@@ -1,11 +1,10 @@
 package de.dfki.StigLD;
 
 
-import de.dfki.StigLD.json.JSON_Serializer;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import de.dfki.StigLD.json.JSON_Serializer_Ant;
+import de.dfki.StigLD.Benchmark.Benchmark;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -23,16 +22,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 
 @RestController
+@CrossOrigin(origins="*")
 @RequestMapping("/sparql/")
 public class Controller {
+    private String fusekiserver = "http://fusekiserver:3230/ds/";
+
     @GetMapping("/getModel")
     public String getModel() throws IOException, UnirestException {
-        initEvolve();
+        //initEvolve();
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-query")
                 .header("Accept", "text/turtle")
                 .body(getAllTriples)
@@ -54,9 +58,9 @@ public class Controller {
     }
     @GetMapping(value="/json", produces="application/json")
     public String json() throws IOException, UnirestException {
-        initEvolve();
+        //initEvolve();
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-query")
                 .header("Accept", "text/turtle")
                 .body(getAllTriples)
@@ -71,15 +75,29 @@ public class Controller {
         }
         Model model = ModelFactory.createDefaultModel();
         model.read(IOUtils.toInputStream(resp, "UTF-8"), null, "TTL");
-	//return new JSON_Serializer().getModelAsJson(model);
-	return new JSON_Serializer_Ant().getModelAsJson(model);
+	return new JSON_Serializer().getModelAsJson(model);
     }
 
 
-    @PostMapping("/updatedDiffusion")
+    @PostMapping("/addOrders")
     public String query1(@RequestBody String query) throws IOException, UnirestException {
-
-        return  "Hello";
+        Unirest.setTimeouts(0, 0);
+	
+        HttpResponse<String> response = Unirest.post(fusekiserver)
+                .header("Content-Type", "application/sparql-update")
+                .body(query)
+                .asString();
+	
+        String resp;
+        try{
+            resp = response.getBody().toString();
+        }
+        catch (NullPointerException e)
+        {
+            resp = "No response";
+//            System.out.println(e.getMessage());
+        }
+        return  resp;
     }
 
 
@@ -87,7 +105,7 @@ public class Controller {
     public String query(@RequestBody String query) throws IOException, UnirestException {
         initEvolve();
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-query")
                 .header("Accept", "text/turtle")
                 .body(query)
@@ -104,13 +122,16 @@ public class Controller {
     }
 
     @PostMapping("/update")
-    public String postUpdate(@RequestBody String query) throws IOException, UnirestException {
-        initEvolve();
+    public String postUpdate(@RequestBody String query) throws IOException, UnirestException, InterruptedException {
+	LocalDateTime before = LocalDateTime.now();
+	initEvolve();
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-update")
                 .body(query)
                 .asString();
+	LocalDateTime after = LocalDateTime.now();
+	
         String resp;
         try{
             resp = response.getBody().toString();
@@ -118,14 +139,16 @@ public class Controller {
         catch (NullPointerException e)
         {
             resp = "No response";
+//            System.out.println(e.getMessage());
         }
         return  resp;
     }
 
+
     @PostMapping("/evolve")
     public String evolve(@RequestBody String query) throws IOException, UnirestException {
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-update")
                 .body(evolve)
                 .asString();
@@ -142,16 +165,16 @@ public class Controller {
 
     public void initEvolve() throws UnirestException {
         Unirest.setTimeouts(0, 0);
-        HttpResponse<String> response1 = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response1 = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-update")
                 .body(evolve)
                 .asString();
 //        d_evolve();
-        HttpResponse<String> response2 = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response2 = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-update")
                 .body(diff_evolve)
                 .asString();
-        HttpResponse<String> response3 = Unirest.post("http://localhost:3230/ds/")
+        HttpResponse<String> response3 = Unirest.post(fusekiserver)
                 .header("Content-Type", "application/sparql-update")
                 .body(deleteStigma)
                 .asString();
@@ -298,10 +321,10 @@ public class Controller {
                 "        BIND(stigFN:diffusion_1D(?dist, ?duration, ?srcLevel, ?decay) AS ?diffusion)\n" +
                 "        FILTER(?dist >= 0 && ?dist < 10 )\n" +
                 "    } order by asc (?dist)\n";
-        String url = "http://localhost:" + 3230 + "/ds/";
+        
         double output[] = new double[10];
         int i = 0;
-        try ( QueryExecution qExec = QueryExecutionFactory.sparqlService(url, get) ) {
+        try ( QueryExecution qExec = QueryExecutionFactory.sparqlService(fusekiserver, get) ) {
             ResultSet rs = qExec.execSelect() ;
 //            ResultSetFormatter.out(rs);
             for ( ; rs.hasNext() ; )
@@ -314,7 +337,7 @@ public class Controller {
                 }
                 String upd = getUpdate(output[0], output[i], i++);
 //                System.out.println(output[0]+"----------"+output[i++]);
-                RDFConnection conn = RDFConnectionFactory.connect(url);
+                RDFConnection conn = RDFConnectionFactory.connect(fusekiserver);
                 UpdateRequest request = UpdateFactory.create(upd);
                 conn.update(request);
             }
@@ -424,4 +447,5 @@ public class Controller {
                     "    FILTER (isBlank(?stigma))\n" +
                     "    FILTER(?lvl=0)\n" +
                     "}";
+           
 }

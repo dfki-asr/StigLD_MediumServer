@@ -77,14 +77,50 @@
                         <version>1.18.16</version>
                         <type>jar</type>
                 </dependency>
+                <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
+                <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+<!--            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <version>2.5.3</version>
+            </dependency>-->
+            
+
+
         </dependencies>
 
         <build>
-                <plugins>
-                        <plugin>
-                                <groupId>org.springframework.boot</groupId>
-                                <artifactId>spring-boot-maven-plugin</artifactId>
-                        </plugin>
+            <plugins>
+                    <plugin>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                            <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+            <execution>
+                <phase>install</phase>
+                <goals>
+                    <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
+    <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+            <archive>
+                <manifest>
+                    <addClasspath>true</addClasspath>
+                    <classpathPrefix>lib/</classpathPrefix>
+                    <mainClass>${mainClass}</mainClass>
+                </manifest>
+            </archive>
+        </configuration>
+                </plugin>
                 </plugins>
         </build>
 
