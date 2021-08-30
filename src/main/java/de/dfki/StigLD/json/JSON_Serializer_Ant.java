@@ -213,7 +213,7 @@ public class JSON_Serializer_Ant {
     private final String qGetFoodSources = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT ?x ?y ?nutri ?capacity WHERE {"
+	    + "SELECT DISTINCT ?x ?y ?nutri ?capacity WHERE {"
 	    + "?source a ex:FoodSource ; ex:nutritionalValue ?nutri ; ex:totalAmount ?capacity ; "
 	    + "	st:locatedAt [ a st:Topos ; pos:xPos ?x; pos:yPos ?y ] ."
 	    + "}";
@@ -221,7 +221,7 @@ public class JSON_Serializer_Ant {
     private final String qGetAnts = "PREFIX ex:<http://example.org/>\n"
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
-	    + "SELECT ?carries ?ant WHERE {\n"
+	    + "SELECT DISTINCT ?x ?y ?carries ?ant WHERE {\n"
 	    + "?ant a ex:Ant ; st:locatedAt [ a st:Topos ; pos:xPos ?x ; pos:yPos ?y ] .\n"
 	    + "OPTIONAL {?ant ex:carries ?carries}	\n"
 	    + "}";
@@ -230,7 +230,7 @@ public class JSON_Serializer_Ant {
 	    + "PREFIX pos: <http://example.org/property/position#>\n"
 	    + "PREFIX st:  <http://example.org/stigld/>\n"
 	    + "\n"
-	    + "SELECT ?hive ?stock WHERE {\n"
+	    + "SELECT DISTINCT ?x ?y ?hive ?stock WHERE {\n"
 	    + "?hive a ex:AntHive ; st:locatedAt [ a st:Topos ; pos:xPos ?x ; pos:yPos ?y ] .\n"
 	    + "OPTIONAL {?hive ex:foodStock ?stock}	\n"
 	    + "}";
