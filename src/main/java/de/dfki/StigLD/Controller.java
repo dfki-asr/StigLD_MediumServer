@@ -83,9 +83,9 @@ public class Controller {
     public void initEvolve() throws UnirestException {
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> location_response = Unirest.post("http://localhost:3230/ds/")
-                .header("Content-Type", "application/sparql-update")
-                .body(evolve)
-                .asString();
+              .header("Content-Type", "application/sparql-update")
+              .body(evolve)
+              .asString();
     }
     
     public String evolve = "prefix ex: <http://example.org/>\n"
@@ -105,7 +105,7 @@ public class Controller {
 	    + "  FILTER(isBlank(?stigma))\n"
 	    + "} ;\n"
 	    + "\n"
-	    + "### RECALCULATE LOCATION BASED STIGMATA ON CURRENT TIME\n"
+	    + "### RECALCULATE BASED ON CURRENT TIME\n"
 	    + "INSERT {\n"
 	    + "  ?package st:carries ?urgency .\n"
 	    + "  ?urgency a st:Stigma , ex:UrgencyStigma ; st:concentration ?value ; ex:forTruck ?truck .\n"
@@ -115,14 +115,14 @@ public class Controller {
 	    + "       ?package a ex:Package .\n"
 	    + "   }}\n"
 	    + "\n"
-	    + "  ex:confidence a ex:confidenceFactor ; rdf:value ?confidence .\n"
-	    + "  ex:start a ex:startTime; rdf:value ?startTime .\n"
-	    + "  BIND((stigFN:duration_secs(?startTime, NOW())) as ?timePassed)\n"
+	    + "  ex:confidence a ex:confidenceFactor ; rdf:value ?confidence .  \n"
+	    + "  OPTIONAL { ex:Clock rdf:value ?clocktime	}\n"
+	    + "  BIND(IF(bound(?clocktime), ?clocktime, 0) as ?timePassed)\n"
 	    + "\n"
 	    + "  ?package a ex:Package ; ex:located ?pickupLocation .\n"
 	    + "\n"
-	    + "  OPTIONAL { ?truck a ex:Truck ; ex:located [ a ex:Location ; ex:driveTime [ ex:destination ?pickupLocation ; rdf:value ?t ] ] .}\n"
-	    + "  BIND(IF(bound(?t),?t,0) as ?driveTimeToPickup)"
+	    + "  OPTIONAL { ?truck a ex:Truck ; ex:located [ a ex:Location ; ex:driveTime [ ex:destination ?pickupLocation ; rdf:value ?t ] ] .}"
+	    + "  BIND(IF(bound(?t),?t,0) as ?driveTimeToPickup)  "
 	    + "  ?goal a ex:Goal ; ex:payload ?package ; ex:deadline ?deadline ; ex:destination [a ex:Location ; ex:driveTime [ ex:destination ?pickupLocation ; rdf:value ?driveTimeToDeliver ] ].\n"
 	    + "  BIND ((?driveTimeToPickup + ?driveTimeToDeliver) as ?totalDriveTime)\n"
 	    + "  BIND((?deadline - ?timePassed - ?totalDriveTime ) as ?remaining)\n"
@@ -136,7 +136,7 @@ public class Controller {
 	    + "} ;"
 	    + ""
 	    + ""
-	    + "### RECALCULATE AREA BASED STIGMATA BASED ON CURRENT TIME\n"
+	    + "### RECALCULATE BASED ON CURRENT TIME\n"
 	    + "INSERT {\n"
 	    + "  ?package st:carries ?urgency .\n"
 	    + "  ?urgency a st:Stigma , ex:UrgencyStigma ; st:concentration ?value ; ex:forTruck ?truck .\n"
@@ -146,14 +146,14 @@ public class Controller {
 	    + "       ?package a ex:Package .\n"
 	    + "   }}\n"
 	    + "\n"
-	    + "   ex:confidence a ex:confidenceFactor ; rdf:value ?confidence .\n"
-	    + "   ex:start a ex:startTime; rdf:value ?start .\n"
+	    + "   ex:confidence a ex:confidenceFactor ; rdf:value ?confidence .   \n"
 	    + "   ?truck a ex:Truck ; ex:areas ?area ; ex:located ?location .\n"
 	    + "   ?package a ex:Package ; ex:located ?area .\n"
 	    + "   ?location ex:driveTime [ ex:destination ?destination ; rdf:value ?driveTime ] .\n"
 	    + "   ?goal a ex:Goal ; ex:payload ?package ; ex:destination ?destination ; ex:deadline ?deadline .\n"
 	    + "\n"
-	    + "   BIND(stigFN:duration_secs(?start, NOW()) as ?timePassed)\n"
+	    + "   OPTIONAL { ex:Clock rdf:value ?clocktime	}\n"
+	    + "   BIND(IF(bound(?clocktime), ?clocktime, 0) as ?timePassed)\n"
 	    + "   BIND((?deadline-?timePassed) as ?timeRemaining)\n"
 	    + "   BIND(?confidence * ?driveTime as ?estimateRequired)\n"
 	    + "   BIND(IF(?timeRemaining - ?driveTime > 0 , ?timeRemaining - ?driveTime , 0) as ?estimateLeft)\n"
